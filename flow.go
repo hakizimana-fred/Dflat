@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 type Packet struct {
@@ -19,28 +20,35 @@ type Sender struct {
 	sendComplete bool
 }
 
-func (s *Sender) InitializeWindow() {
-	s.windowStart = 0
-	s.windowEnd = s.windowStart + s.windowSize
-	if s.windowEnd > len(s.packets) {
-		s.windowEnd = len(s.packets)
+func (s *Sender) Send() {
+	for !s.sendComplete {
+		for i := s.windowStart; i <= s.windowEnd; i++ {
+			if i < len(s.packets) {
+				SendPacket(s.packets[i])
+			}
+		}
+
+		if s.windowEnd >= len(s.packets)-1 {
+			s.sendComplete = true
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+		s.slideWindow()
+
 	}
+
 }
 
 func (s *Sender) slideWindow() {
-	s.windowStart++
-	s.windowEnd++
-	if s.windowEnd > len(s.packets) {
-		s.windowEnd = len(s.packets)
+	for s.windowStart <= s.ackReceived {
+		s.windowStart++
 	}
-}
 
-func (s *Sender) sendPackets() {
-	for i := s.windowStart; i < s.windowEnd; i++ {
-		if i >= len(s.packets) {
-			break
-		}
-		SendPacket(s.packets[i])
+	s.windowEnd = s.windowStart + s.windowSize - 1
+
+	if s.windowEnd >= len(s.packets) {
+		s.windowEnd = len(s.packets) - 1
 	}
 }
 

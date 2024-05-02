@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 )
 
@@ -13,7 +12,7 @@ func main() {
 		return
 	}
 
-	maxPacketSize := 1024 // 1GB
+	maxPacketSize := 1024
 	packets := make([]*Packet, 0)
 
 	for i := 0; i < len(content); i += maxPacketSize {
@@ -26,9 +25,17 @@ func main() {
 		packetData := content[i:end]
 		packet := &Packet{payload: []byte(packetData)}
 		packets = append(packets, packet)
+
 	}
 
-	for _, packet := range packets {
-		fmt.Printf("Packet: seqNum=%d, payload=%s\n", packet.seqNum, string(packet.payload))
+	sender := Sender{
+		windowSize:   5,
+		packets:      packets,
+		windowStart:  0,
+		windowEnd:    4,
+		ackReceived:  -1,
+		sendComplete: false,
 	}
+
+	sender.Send()
 }
